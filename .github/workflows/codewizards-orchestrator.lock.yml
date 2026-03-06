@@ -22,60 +22,42 @@
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"c4adfeb4be77c87751f77858501a23fec9f021940a5dfdd17e72afb414e73732","compiler_version":"v0.53.3"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"eefe0a059025ab1caff2dd06e83fc3c6c1fcb2739227a342b0aedbcf8157bcb0","compiler_version":"v0.53.3"}
 
-name: "Multi-Service Deployment Orchestrator"
+name: "CodeWizards Multi-Service Deployment Orchestrator"
 "on":
   workflow_dispatch:
     inputs:
-      deploy_infrastructure:
-        default: true
-        description: DEPLOY_INFRASTRUCTURE
-        required: false
-        type: boolean
-      disable_console_logs:
+      build_only:
         default: false
-        description: DISABLE_CONSOLE_LOGS (for UI services)
+        description: Build only without deployment
         required: false
         type: boolean
       dry_run:
         default: false
-        description: DRY_RUN
+        description: Dry run mode (no actual deployment)
         required: false
         type: boolean
       environment:
-        description: ENVIRONMENT (dev, tst, e2e)
+        description: Deployment environment
         options:
         - dev
-        - e2e
-        - tst
+        - staging
+        - prod
         required: true
         type: choice
-      graviton:
-        default: false
-        description: GRAVITON (build for ARM64/Graviton architecture)
+      run_tests:
+        default: true
+        description: Run integration tests
         required: false
         type: boolean
-      infrastructure_branch:
-        default: develop
-        description: INFRA_BRANCH
-        required: false
-        type: string
-      market:
-        description: Market to deploy
-        options:
-        - DE
-        - AT
-        - NGL
-        required: true
-        type: choice
 
 permissions: {}
 
 concurrency:
   group: "gh-aw-${{ github.workflow }}"
 
-run-name: "Multi-Service Deployment Orchestrator"
+run-name: "CodeWizards Multi-Service Deployment Orchestrator"
 
 jobs:
   activation:
@@ -101,7 +83,7 @@ jobs:
           GH_AW_INFO_VERSION: ""
           GH_AW_INFO_AGENT_VERSION: "0.0.421"
           GH_AW_INFO_CLI_VERSION: "v0.53.3"
-          GH_AW_INFO_WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+          GH_AW_INFO_WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -132,7 +114,7 @@ jobs:
       - name: Check workflow file timestamps
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
-          GH_AW_WORKFLOW_FILE: "orechestrator-agent.lock.yml"
+          GH_AW_WORKFLOW_FILE: "codewizards-orchestrator.lock.yml"
         with:
           script: |
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
@@ -198,7 +180,7 @@ jobs:
           </system>
           GH_AW_PROMPT_EOF
           cat << 'GH_AW_PROMPT_EOF'
-          {{#runtime-import .github/workflows/orechestrator-agent.md}}
+          {{#runtime-import .github/workflows/codewizards-orchestrator.md}}
           GH_AW_PROMPT_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
@@ -275,7 +257,7 @@ jobs:
       GH_AW_SAFE_OUTPUTS: /opt/gh-aw/safeoutputs/outputs.jsonl
       GH_AW_SAFE_OUTPUTS_CONFIG_PATH: /opt/gh-aw/safeoutputs/config.json
       GH_AW_SAFE_OUTPUTS_TOOLS_PATH: /opt/gh-aw/safeoutputs/tools.json
-      GH_AW_WORKFLOW_ID_SANITIZED: orechestratoragent
+      GH_AW_WORKFLOW_ID_SANITIZED: codewizardsorchestrator
     outputs:
       checkout_pr_success: ${{ steps.checkout-pr.outputs.checkout_pr_success || 'true' }}
       detection_conclusion: ${{ steps.detection_conclusion.outputs.conclusion }}
@@ -920,7 +902,7 @@ jobs:
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
-          WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+          WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
           WORKFLOW_DESCRIPTION: "No description provided"
           HAS_PATCH: ${{ steps.collect_output.outputs.has_patch }}
         with:
@@ -1014,7 +996,7 @@ jobs:
       issues: write
       pull-requests: write
     concurrency:
-      group: "gh-aw-conclusion-orechestrator-agent"
+      group: "gh-aw-conclusion-codewizards-orchestrator"
       cancel-in-progress: false
     outputs:
       noop_message: ${{ steps.noop.outputs.noop_message }}
@@ -1044,7 +1026,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+          GH_AW_WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1057,7 +1039,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+          GH_AW_WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1070,10 +1052,10 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+          GH_AW_WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
-          GH_AW_WORKFLOW_ID: "orechestrator-agent"
+          GH_AW_WORKFLOW_ID: "codewizards-orchestrator"
           GH_AW_SECRET_VERIFICATION_RESULT: ${{ needs.activation.outputs.secret_verification_result }}
           GH_AW_CHECKOUT_PR_SUCCESS: ${{ needs.agent.outputs.checkout_pr_success }}
           GH_AW_INFERENCE_ACCESS_ERROR: ${{ needs.agent.outputs.inference_access_error }}
@@ -1093,7 +1075,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+          GH_AW_WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_MESSAGE: ${{ steps.noop.outputs.noop_message }}
@@ -1117,10 +1099,10 @@ jobs:
       pull-requests: write
     timeout-minutes: 15
     env:
-      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/orechestrator-agent"
+      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/codewizards-orchestrator"
       GH_AW_ENGINE_ID: "copilot"
-      GH_AW_WORKFLOW_ID: "orechestrator-agent"
-      GH_AW_WORKFLOW_NAME: "Multi-Service Deployment Orchestrator"
+      GH_AW_WORKFLOW_ID: "codewizards-orchestrator"
+      GH_AW_WORKFLOW_NAME: "CodeWizards Multi-Service Deployment Orchestrator"
     outputs:
       assign_to_agent_assigned: ${{ steps.assign_to_agent.outputs.assigned }}
       assign_to_agent_assignment_error_count: ${{ steps.assign_to_agent.outputs.assignment_error_count }}
